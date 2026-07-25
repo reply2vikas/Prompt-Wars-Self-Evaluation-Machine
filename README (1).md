@@ -31,7 +31,9 @@ edit `WEIGHTS` in `rubric.py` if you gather better ground truth).
 ```bash
 pip install -e ".[web,dev]"
 export ANTHROPIC_API_KEY=sk-ant-...
-export PROMPTWARS_JUDGE_MODEL=claude-sonnet-4-5   # set to a model your account has
+# Judge defaults to Fable 5 (claude-fable-5). Route to a cheaper model on
+# iteration passes, then use Fable 5 for the version you're about to submit:
+export PROMPTWARS_JUDGE_MODEL=claude-fable-5      # or claude-sonnet-5 for cheap passes
 ```
 
 ## CLI
@@ -43,6 +45,27 @@ promptwars-score ./my-repo --challenge challenge.md # custom problem statement
 promptwars-score ./my-repo --model claude-haiku-4-5 # cheaper routing
 promptwars-score ./my-repo --gate 90               # exit 1 if composite < 90 (CI gate)
 ```
+
+## Submission artifacts
+
+Drop a `submission.json` at the repo root and the scorer picks it up
+automatically (or fill the fields in the web UI, which override the file):
+
+```json
+{
+  "app_live_link": "https://your-app.vercel.app",
+  "deck_link": "https://.../deck",
+  "demo_video_link": "https://youtu.be/...",
+  "linkedin_post_link": "https://www.linkedin.com/posts/...",
+  "prototype_brief": "One-paragraph before/after story: persona, the moment GenAI improves, why it matters."
+}
+```
+
+The `prototype_brief` and `linkedin_post_link` are fed into the judge's
+**Problem Alignment** context (PromptWars treats the LinkedIn write-up as an
+equally-weighted documentation layer). Missing artifacts become flags — no live
+link, no LinkedIn post, no demo video — so the tool doubles as a submission
+checklist.
 
 ## Web UI
 

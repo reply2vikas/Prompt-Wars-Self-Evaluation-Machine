@@ -1,0 +1,31 @@
+[project]
+name = "promptwars-scorer"
+version = "0.1.0"
+description = "A proxy self-scorer for the six-parameter PromptWars grader."
+requires-python = ">=3.10"
+dependencies = [
+    "anthropic>=0.40",
+]
+
+[project.optional-dependencies]
+web = ["fastapi>=0.115", "uvicorn>=0.30", "pydantic>=2.7"]
+dev = ["pytest>=8.0", "ruff>=0.6", "mypy>=1.11"]
+
+[project.scripts]
+promptwars-score = "promptwars_scorer.cli:main"
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["promptwars_scorer"]
+
+[tool.setuptools.package-data]
+promptwars_scorer = ["web/*.html"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

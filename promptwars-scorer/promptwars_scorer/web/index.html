@@ -1,189 +1,358 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>PromptWars Self-Scorer</title>
 <style>
-  :root {
-    --pitch: #0b1411;        /* floodlit-night pitch */
-    --panel: #101d18;
-    --line: #21362c;         /* pitch chalk lines */
-    --ink: #e7f0ea;
-    --muted: #7d9488;
-    --amber: #f2b03d;        /* floodlight */
-    --grass: #3ecf8e;        /* pass */
-    --red: #ef6f6f;          /* fail */
-    --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, monospace;
-  }
-  * { box-sizing: border-box; }
-  body {
-    margin: 0; background: var(--pitch); color: var(--ink);
-    font: 15px/1.5 system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-    padding: 32px 20px 64px;
-  }
-  .wrap { max-width: 860px; margin: 0 auto; }
-  header { border-bottom: 1px solid var(--line); padding-bottom: 16px; margin-bottom: 24px; }
-  h1 { font-size: 20px; margin: 0; letter-spacing: .02em; }
-  h1 span { color: var(--amber); }
-  .sub { color: var(--muted); font-size: 13px; margin-top: 4px; }
-  form { display: grid; gap: 12px; margin-bottom: 24px; }
-  label { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-  input, textarea {
-    width: 100%; background: var(--panel); border: 1px solid var(--line);
-    color: var(--ink); border-radius: 8px; padding: 10px 12px; font: inherit;
-  }
-  textarea { min-height: 64px; resize: vertical; }
-  input:focus, textarea:focus { outline: 2px solid var(--amber); outline-offset: 1px; }
-  .row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; }
-  .row > div { flex: 1; min-width: 180px; }
-  button {
-    background: var(--amber); color: #1a1206; border: 0; border-radius: 8px;
-    padding: 11px 20px; font-weight: 650; cursor: pointer; font-size: 14px;
-  }
-  button:disabled { opacity: .5; cursor: progress; }
-  button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
-  .scoreboard {
-    display: flex; align-items: baseline; gap: 14px; margin: 8px 0 20px;
-    border: 1px solid var(--line); border-radius: 12px; padding: 18px 22px; background: var(--panel);
-  }
-  .composite { font: 700 46px/1 var(--mono); font-variant-numeric: tabular-nums; }
-  .composite small { font-size: 18px; color: var(--muted); }
-  .grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
-  @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
-  .card { border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; background: var(--panel); }
-  .card .top { display: flex; justify-content: space-between; align-items: baseline; }
-  .name { font-weight: 600; text-transform: capitalize; }
-  .w { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: .1em; }
-  .val { font: 700 26px/1 var(--mono); font-variant-numeric: tabular-nums; }
-  .track { height: 8px; background: #0a1512; border-radius: 999px; margin: 10px 0 8px; overflow: hidden; }
-  .fill { height: 100%; border-radius: 999px; transition: width .5s ease; }
-  .why { font-size: 13px; color: var(--muted); margin: 4px 0 0; }
-  .fixes { margin: 8px 0 0; padding-left: 16px; font-size: 12.5px; color: var(--muted); }
-  .fixes li { margin: 2px 0; }
-  .flags { margin-top: 22px; border-left: 3px solid var(--red); padding: 4px 0 4px 14px; }
-  .flags h3 { margin: 0 0 6px; font-size: 13px; color: var(--red); letter-spacing: .04em; }
-  .flags div { font-size: 13px; color: var(--ink); margin: 3px 0; }
-  .artifacts { border: 1px solid var(--line); border-radius: 8px; padding: 12px 14px; background: var(--panel); }
-  .artifacts summary { cursor: pointer; color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; }
-  .artifacts > div { margin-top: 12px; }
-  .links { margin-top: 20px; border: 1px solid var(--line); border-radius: 12px; padding: 12px 16px; background: var(--panel); }
-  .links h3 { margin: 0 0 8px; font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
-  .links a { color: var(--amber); text-decoration: none; word-break: break-all; }
-  .links a:hover { text-decoration: underline; }
-  .links .brief { color: var(--ink); font-size: 13px; margin-top: 6px; }
-  .err { color: var(--red); font-size: 14px; }
-  footer { color: var(--muted); font-size: 12px; margin-top: 28px; border-top: 1px solid var(--line); padding-top: 14px; }
+:root{
+  --bg:#f4f6fb; --surface:#fff; --soft:#eef2fb; --line:#dfe4ef; --ink:#17203a; --muted:#5d6785;
+  --brand:#2f4aa8; --brand-ink:#fff; --good:#1c8a4f; --good-bg:#e6f5ec; --warn:#a86a00; --warn-bg:#fff4dc;
+  --bad:#b3342f; --bad-bg:#fdeceb; --radius:14px;
+}
+@media (prefers-color-scheme:dark){:root{
+  --bg:#0f1320; --surface:#171c2c; --soft:#1e2540; --line:#2b3350; --ink:#e9ecf6; --muted:#9aa3bf;
+  --brand:#7f9bff; --brand-ink:#0f1320; --good:#5fd396; --good-bg:#143524; --warn:#f0bf5e; --warn-bg:#3a2d10;
+  --bad:#ff8f89; --bad-bg:#3d1b19;
+}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 "Segoe UI",system-ui,-apple-system,Roboto,sans-serif}
+.wrap{max-width:1180px;margin:0 auto;padding:0 16px 56px}
+header{background:var(--surface);border-bottom:1px solid var(--line)}
+header .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-top:14px;padding-bottom:14px}
+.mark{font-weight:800;letter-spacing:-.4px;font-size:19px}
+.mark span{color:var(--brand)}
+.pill{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--soft)}
+.pill.good{color:var(--good);background:var(--good-bg);border-color:transparent}
+.pill.warn{color:var(--warn);background:var(--warn-bg);border-color:transparent}
+.pill.bad{color:var(--bad);background:var(--bad-bg);border-color:transparent}
+.spacer{flex:1}
+.notice{margin:16px 0;padding:12px 16px;border-radius:var(--radius);background:var(--good-bg);color:var(--ink);font-size:14px}
+.notice b{color:var(--good)}
+.tabs{display:flex;gap:6px;background:var(--soft);padding:6px;border-radius:var(--radius);margin:16px 0;flex-wrap:wrap}
+.tabs button{border:0;background:transparent;color:var(--ink);font:inherit;padding:9px 18px;border-radius:10px;cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--surface);font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;align-items:start}
+@media (max-width:900px){.grid{grid-template-columns:1fr}}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:20px;margin-bottom:18px}
+h2{font-size:17px;margin:0 0 4px} h3{font-size:15px;margin:0 0 8px}
+.sub{color:var(--muted);font-size:13.5px;margin:0 0 14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font-size:12.5px;padding:3px 10px;border-radius:8px;border:1px solid var(--line);background:var(--surface)}
+.chip.ok{background:var(--good-bg);border-color:transparent;color:var(--good)}
+.chip.miss{background:var(--warn-bg);border-color:transparent;color:var(--warn)}
+label{display:block;font-weight:600;font-size:13.5px;margin:14px 0 5px}
+label .req{color:var(--bad)}
+input,select,textarea{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+textarea{min-height:76px;resize:vertical}
+input:focus,select:focus,textarea:focus,button:focus-visible{outline:2px solid var(--brand);outline-offset:2px}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:640px){.row{grid-template-columns:1fr}}
+.btn{background:var(--brand);color:var(--brand-ink);border:0;border-radius:10px;padding:11px 22px;font:inherit;font-weight:600;cursor:pointer}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.ghost{background:transparent;color:var(--brand);border:1px solid var(--line)}
+.actions{display:flex;justify-content:flex-end;gap:10px;margin-top:16px;align-items:center}
+.hint{color:var(--muted);font-size:12.5px;margin-top:4px}
+.scorehead{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:640px){.scorehead{grid-template-columns:1fr}}
+.big{font-size:42px;font-weight:800;letter-spacing:-1.5px;line-height:1.1}
+.tile{background:var(--soft);border-radius:12px;padding:16px}
+.tile .k{font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--muted)}
+.param{border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin-bottom:12px}
+.param .top{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap}
+.param .name{font-weight:700}
+.param .num{font-size:24px;font-weight:800;margin-left:auto}
+.bar{height:8px;border-radius:99px;background:var(--soft);overflow:hidden;margin:8px 0}
+.bar i{display:block;height:100%;border-radius:99px;background:var(--brand)}
+.small{font-size:13px;color:var(--muted)}
+ul.tight{margin:6px 0 0;padding-left:18px} ul.tight li{margin:3px 0}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--muted);font-weight:600;font-size:12.5px}
+.scroll{overflow-x:auto}
+.flag{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:8px 12px;margin:6px 0;font-size:13.5px}
+.err{background:var(--bad-bg);color:var(--bad);border-radius:10px;padding:10px 14px;margin-top:12px}
+.hist li{list-style:none;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
+.hist{padding:0;margin:0}
+code{background:var(--soft);padding:1px 6px;border-radius:6px;font-size:12.5px}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
+<header><div class="wrap">
+  <div class="mark">PromptWars <span>Self-Scorer</span></div>
+  <span class="pill">Independent proxy — not Hack2Skill's grader</span>
+  <div class="spacer"></div>
+  <span class="pill" id="judgePill">checking…</span>
+</div></header>
+
 <div class="wrap">
-  <header>
-    <h1>PromptWars <span>Self-Scorer</span></h1>
-    <p class="sub">A proxy for the six-parameter grader — deterministic checks plus an LLM judge. Approximation, not ground truth.</p>
-  </header>
+  <div class="notice"><b>How to use it:</b> score your repo here first, work through the fixes, then submit on Hack2Skill. Afterwards, record the real score under <b>Real scores</b> — every real result you add makes the next estimate better.</div>
 
-  <form id="f">
-    <div>
-      <label for="repo">Repo path (local, absolute or ~)</label>
-      <input id="repo" placeholder="~/code/volunteer-copilot" required />
-    </div>
-    <div class="row">
+  <div class="tabs" role="tablist" aria-label="Sections">
+    <button role="tab" id="tab-score" aria-controls="panel-score" aria-selected="true">Submission</button>
+    <button role="tab" id="tab-records" aria-controls="panel-records" aria-selected="false">Real scores</button>
+    <button role="tab" id="tab-accuracy" aria-controls="panel-accuracy" aria-selected="false">Accuracy</button>
+  </div>
+
+  <!-- ============ SUBMISSION ============ -->
+  <section id="panel-score" role="tabpanel" aria-labelledby="tab-score">
+    <div class="grid">
       <div>
-        <label for="model">Judge model</label>
-        <input id="model" placeholder="claude-sonnet-4-5" />
+        <div class="card">
+          <h2>AI Code Submission (proxy)</h2>
+          <p class="sub">Your code is evaluated on the same six parameters the hackathon grader uses.</p>
+          <div class="chips" aria-label="Parameters">
+            <span class="chip">Code Quality</span><span class="chip">Security</span><span class="chip">Efficiency</span>
+            <span class="chip">Testing</span><span class="chip">Accessibility</span><span class="chip">Problem Statement Alignment</span>
+          </div>
+          <form id="scoreForm" novalidate>
+            <label for="challenge">Challenge <span class="req">*</span></label>
+            <select id="challenge"></select>
+            <div id="customWrap" hidden>
+              <label for="challengeText">Problem statement <span class="req">*</span></label>
+              <textarea id="challengeText" maxlength="6000" placeholder="Paste the exact problem statement from the challenge page. Problem Alignment is judged against this text."></textarea>
+            </div>
+            <label for="repo">Public GitHub Repository Link <span class="req">*</span></label>
+            <input id="repo" type="url" placeholder="https://github.com/owner/repo" autocomplete="off" maxlength="1024">
+            <div class="hint">Public repositories only, under 10 MB. The code is read, never run.</div>
+            <label for="deployed">Deployed Link</label>
+            <input id="deployed" type="url" placeholder="https://your-app.example.com" autocomplete="off" maxlength="1024">
+            <label for="changes">Describe the changes/updates made in the deployed version</label>
+            <textarea id="changes" maxlength="1024"></textarea>
+            <label for="genai">Mention the Gen AI services utilized, and where you used them</label>
+            <textarea id="genai" maxlength="1024"></textarea>
+            <div class="row">
+              <div><label for="runs">Judge passes</label>
+                <select id="runs"><option value="1">1 — fastest</option><option value="3" selected>3 — median, steadier</option></select></div>
+              <div><label for="edition">Edition (optional)</label>
+                <input id="edition" placeholder="e.g. Virtual PromptWars C6" maxlength="80"></div>
+            </div>
+            <div class="actions"><span class="small" id="scoreStatus" role="status"></span>
+              <button class="btn" id="scoreBtn" type="submit">Evaluate</button></div>
+            <div class="err" id="scoreErr" role="alert" hidden></div>
+          </form>
+        </div>
+        <div id="result" aria-live="polite"></div>
       </div>
-      <div style="flex:0 0 auto">
-        <button id="go" type="submit">Score</button>
-      </div>
+      <aside>
+        <div class="card"><h3>Attempt history</h3>
+          <p class="small">Runs on this device. Proxy runs do not use up your three official attempts.</p>
+          <ul class="hist" id="hist"></ul></div>
+        <div class="card"><h3>Reading the result</h3>
+          <p class="small"><b>Engine score</b> is this tool's own judgement. <b>Estimated real score</b> appears only once enough of your real results have been recorded and the estimate has beaten simple guessing on held-out data. Until then it is withheld on purpose.</p></div>
+      </aside>
     </div>
-    <div>
-      <label for="challenge">Challenge statement (optional — defaults to Challenge 4)</label>
-      <textarea id="challenge" placeholder="Leave blank to use the built-in Smart Stadiums statement"></textarea>
+  </section>
+
+  <!-- ============ REAL SCORES ============ -->
+  <section id="panel-records" role="tabpanel" aria-labelledby="tab-records" hidden>
+    <div class="card">
+      <h2>Record a real Hack2Skill result</h2>
+      <p class="sub">Enter what the official grader actually gave. The composite alone helps; the six parameter scores help far more.</p>
+      <form id="recForm" novalidate>
+        <div class="row">
+          <div><label for="rRepo">Public GitHub Repository Link <span class="req">*</span></label><input id="rRepo" type="url" placeholder="https://github.com/owner/repo"></div>
+          <div><label for="rEdition">Edition / challenge name</label><input id="rEdition" placeholder="e.g. PromptWars C3"></div>
+        </div>
+        <div class="row">
+          <div><label for="rSource">Whose submission</label><select id="rSource"><option value="own">Mine</option><option value="public">Another participant (public repo)</option></select></div>
+          <div><label for="rAttempt">Attempt number</label><input id="rAttempt" type="number" min="1" max="3"></div>
+        </div>
+        <label for="rChallenge">Problem statement for that edition</label>
+        <textarea id="rChallenge" maxlength="6000" placeholder="Needed so the engine can be checked fairly against this result."></textarea>
+        <div class="row" id="rScores"></div>
+        <label for="rNotes">Notes</label><input id="rNotes" maxlength="300" placeholder="Anything unusual about this submission">
+        <div class="actions"><span class="small" id="recStatus" role="status"></span><button class="btn" type="submit" id="recBtn">Save real result</button></div>
+        <div class="err" id="recErr" role="alert" hidden></div>
+      </form>
     </div>
+    <div class="card"><h2>Recorded results</h2><p class="sub" id="recCount"></p><div class="scroll" id="recTable"></div></div>
+  </section>
 
-    <details class="artifacts">
-      <summary>Submission artifacts (optional — overrides submission.json)</summary>
-      <div class="row">
-        <div><label for="app_live_link">App / live link</label><input id="app_live_link" placeholder="https://…" /></div>
-        <div><label for="deck_link">Deck link</label><input id="deck_link" placeholder="https://…" /></div>
-      </div>
-      <div class="row">
-        <div><label for="demo_video_link">Demo video</label><input id="demo_video_link" placeholder="https://…" /></div>
-        <div><label for="linkedin_post_link">LinkedIn post</label><input id="linkedin_post_link" placeholder="https://…" /></div>
-      </div>
-      <div>
-        <label for="prototype_brief">Prototype brief / about the project</label>
-        <textarea id="prototype_brief" placeholder="One-paragraph before/after story: persona, the moment GenAI improves, why it matters"></textarea>
-      </div>
-    </details>
-  </form>
-
-  <div id="out" aria-live="polite"></div>
-
-  <footer>Runs the scorer server-side against a local path. Local dev tool — don't expose publicly.</footer>
+  <!-- ============ ACCURACY ============ -->
+  <section id="panel-accuracy" role="tabpanel" aria-labelledby="tab-accuracy" hidden>
+    <div class="card">
+      <h2>How accurate is this tool?</h2>
+      <p class="sub">Measured only against real results you have recorded. Errors below are held-out: each result is predicted without having seen it.</p>
+      <div id="accSummary"></div>
+      <div class="scroll" id="accTable"></div>
+      <div class="actions"><span class="small" id="accStatus" role="status"></span><button class="btn ghost" id="refit">Refit from recorded results</button></div>
+    </div>
+    <div class="card"><h3>What makes it more accurate</h3>
+      <ul class="tight">
+        <li><b>Anchors.</b> Recorded results are shown to the judge as reference points, so it scores on the real grader's scale.</li>
+        <li><b>Median of three passes.</b> Removes most of the judge's run-to-run jitter.</li>
+        <li><b>Calibration.</b> A small correction fitted on your results. It switches on per parameter only when it beats both the raw score and "always guess the average" on held-out data. Run <code>promptwars-score evaluate</code> then <code>promptwars-score calibrate</code> after adding results.</li>
+      </ul>
+    </div>
+  </section>
 </div>
 
 <script>
-const W = { code_quality:"High", problem_alignment:"High", security:"Med", efficiency:"Med", testing:"Low", accessibility:"Low" };
-const ORDER = ["code_quality","problem_alignment","security","efficiency","testing","accessibility"];
-const out = document.getElementById("out");
-
-function color(s){ return s >= 90 ? "var(--grass)" : s >= 70 ? "var(--amber)" : "var(--red)"; }
-function esc(t){ const d=document.createElement("div"); d.textContent=t??""; return d.innerHTML; }
-
-function render(data){
-  const cards = ORDER.map(k => {
-    const p = data.parameters[k];
-    const fixes = (p.fixes||[]).map(f=>`<li>${esc(f)}</li>`).join("");
-    return `<div class="card">
-      <div class="top"><span class="name">${k.replace(/_/g," ")}</span><span class="w">${W[k]}</span></div>
-      <div class="val" style="color:${color(p.score)}">${p.score}</div>
-      <div class="track"><div class="fill" style="width:${p.score}%;background:${color(p.score)}"></div></div>
-      <p class="why">${esc(p.rationale)}</p>
-      ${fixes ? `<ul class="fixes">${fixes}</ul>` : ""}
-    </div>`;
-  }).join("");
-  const flags = (data.flags||[]).length
-    ? `<div class="flags"><h3>Flags</h3>${data.flags.map(f=>`<div>⚠ ${esc(f)}</div>`).join("")}</div>` : "";
-  const s = data.submission || {};
-  const linkRow = (label, url) => url ? `<div><strong>${label}:</strong> <a href="${esc(url)}" target="_blank" rel="noopener">${esc(url)}</a></div>` : "";
-  const links = (s.app_live_link || s.deck_link || s.demo_video_link || s.linkedin_post_link || s.prototype_brief)
-    ? `<div class="links"><h3>Submission artifacts</h3>
-        ${linkRow("App / live", s.app_live_link)}${linkRow("Deck", s.deck_link)}
-        ${linkRow("Demo video", s.demo_video_link)}${linkRow("LinkedIn", s.linkedin_post_link)}
-        ${s.prototype_brief ? `<div class="brief">${esc(s.prototype_brief)}</div>` : ""}</div>` : "";
-  out.innerHTML = `
-    <div class="scoreboard">
-      <div class="composite" style="color:${color(data.composite)}">${data.composite}<small>/100</small></div>
-      <div class="sub">weighted composite · model ${esc(data.model)}</div>
-    </div>
-    <div class="grid">${cards}</div>${flags}${links}`;
+const P = [["code_quality","Code Quality"],["security","Security"],["efficiency","Efficiency"],["testing","Testing"],["accessibility","Accessibility"],["problem_alignment","Problem Statement Alignment"]];
+const W = {3:"High weight",2:"Medium weight",1:"Low weight"};
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const tone = s => s >= 90 ? "good" : s >= 75 ? "warn" : "bad";
+async function api(path, body){
+  const res = await fetch(path, body ? {method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)} : undefined);
+  const data = await res.json().catch(() => ({}));
+  if(!res.ok) throw new Error(typeof data.detail === "string" ? data.detail : "Request failed.");
+  return data;
 }
 
-document.getElementById("f").addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const btn = document.getElementById("go");
-  btn.disabled = true; out.innerHTML = `<p class="sub">Scoring…</p>`;
-  try {
-    const body = { repo_path: document.getElementById("repo").value.trim() };
-    const m = document.getElementById("model").value.trim();
-    const c = document.getElementById("challenge").value.trim();
-    if (m) body.model = m;
-    if (c) body.challenge = c;
-    for (const id of ["app_live_link","deck_link","demo_video_link","prototype_brief","linkedin_post_link"]) {
-      const v = document.getElementById(id).value.trim();
-      if (v) body[id] = v;
-    }
-    const r = await fetch("/api/score", {
-      method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify(body)
-    });
-    if (!r.ok) { const {detail} = await r.json().catch(()=>({detail:r.statusText})); throw new Error(detail); }
-    render(await r.json());
-  } catch (err) {
-    out.innerHTML = `<p class="err">Couldn't score that: ${esc(err.message)}</p>`;
-  } finally { btn.disabled = false; }
+/* ---- tabs ---- */
+const tabs = [...document.querySelectorAll('[role="tab"]')];
+function show(tab){
+  tabs.forEach(t => { const on = t === tab; t.setAttribute("aria-selected", on); t.tabIndex = on ? 0 : -1; $(t.getAttribute("aria-controls")).hidden = !on; });
+  if(tab.id === "tab-records") loadRecords();
+  if(tab.id === "tab-accuracy") loadAccuracy();
+}
+tabs.forEach((t,i) => {
+  t.addEventListener("click", () => show(t));
+  t.addEventListener("keydown", e => { if(e.key==="ArrowRight"||e.key==="ArrowLeft"){ const n = tabs[(i + (e.key==="ArrowRight"?1:tabs.length-1)) % tabs.length]; n.focus(); show(n);} });
 });
+
+/* ---- setup ---- */
+let challenges = [];
+async function init(){
+  try{
+    const h = await api("/api/health");
+    $("judgePill").textContent = h.judge_available ? "Judge ready · " + h.model : "No API key — evidence checks only";
+    $("judgePill").className = "pill " + (h.judge_available ? "good" : "warn");
+  }catch{ $("judgePill").textContent = "Server unreachable"; $("judgePill").className = "pill bad"; }
+  try{ challenges = await api("/api/challenges"); }catch{ challenges = []; }
+  $("challenge").innerHTML = challenges.map(c => `<option value="${esc(c.id)}">${esc(c.name)}</option>`).join("") + `<option value="__custom">Other — paste the problem statement</option>`;
+  $("challenge").addEventListener("change", () => $("customWrap").hidden = $("challenge").value !== "__custom");
+  $("rScores").innerHTML = [["composite","Overall score"], ...P].map(([k,l]) => `<div><label for="s_${k}">${esc(l)}</label><input id="s_${k}" type="number" min="0" max="100" step="0.01" inputmode="decimal"></div>`).join("");
+  renderHist();
+}
+
+/* ---- history (per device; storage may be unavailable) ---- */
+function hist(){ try{ return JSON.parse(localStorage.getItem("pw_hist") || "[]"); }catch{ return []; } }
+function pushHist(e){ try{ localStorage.setItem("pw_hist", JSON.stringify([e, ...hist()].slice(0,12))); }catch{} renderHist(); }
+function renderHist(){
+  const h = hist();
+  $("hist").innerHTML = h.length ? h.map(e => `<li><b>${esc(e.repo)}</b><br>${e.score == null ? "evidence only" : "engine " + esc(e.score)}${e.est != null ? " · est. " + esc(e.est) : ""} <span class="small">· ${esc(e.when)}</span></li>`).join("") : `<li class="small">No runs yet.</li>`;
+}
+
+/* ---- scoring ---- */
+$("scoreForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("scoreErr"); err.hidden = true;
+  const custom = $("challenge").value === "__custom";
+  if(!$("repo").value.trim()){ err.textContent = "Enter the public GitHub repository link."; err.hidden = false; $("repo").focus(); return; }
+  if(custom && !$("challengeText").value.trim()){ err.textContent = "Paste the problem statement for this challenge."; err.hidden = false; $("challengeText").focus(); return; }
+  $("scoreBtn").disabled = true; $("scoreStatus").textContent = "Cloning and evaluating — this can take a minute…";
+  try{
+    const d = await api("/api/score", {
+      repo_url: $("repo").value.trim(), challenge_id: custom ? "" : $("challenge").value,
+      challenge_text: custom ? $("challengeText").value : "", deployed_link: $("deployed").value.trim(),
+      changes: $("changes").value, genai_services: $("genai").value, runs: +$("runs").value, edition: $("edition").value.trim()
+    });
+    renderResult(d);
+    pushHist({repo: d.repo, score: d.composite, est: d.calibrated_score, when: new Date().toLocaleString()});
+    $("scoreStatus").textContent = "";
+    $("result").scrollIntoView({behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block:"start"});
+  }catch(ex){ err.textContent = ex.message; err.hidden = false; $("scoreStatus").textContent = ""; }
+  finally{ $("scoreBtn").disabled = false; }
+});
+
+function estimateTile(d){
+  const c = (d.calibration || {}).composite || {};
+  if(c.estimate != null){
+    const weak = c.status === "extrapolated";
+    return `<div class="tile"><div class="k">Estimated real score</div><div class="big">${esc(c.estimate)} <span class="small">± ${esc(c.band)}</span></div>
+      <div class="small">Learned from ${esc(c.n)} real result(s) · held-out error ${esc(c.loo_mae)}${weak ? " · <b>outside the range seen so far — weak</b>" : ""}</div></div>`;
+  }
+  const why = {not_fitted:"No real results have been fitted yet.", insufficient_support:c.reason || "Too few real results recorded.", no_gain:c.reason || "The correction did not beat simple guessing, so it is switched off."}[c.status] || "Not available for this run.";
+  return `<div class="tile"><div class="k">Estimated real score</div><div class="big" style="font-size:24px">Withheld</div><div class="small">${esc(why)}</div></div>`;
+}
+
+function renderResult(d){
+  const scored = d.composite != null;
+  let h = `<div class="card"><h2>Result — ${esc(d.repo)}</h2>
+    <p class="sub">Proxy estimate. Small differences are judge noise; trust the fixes more than the number.</p>
+    <div class="scorehead">
+      <div class="tile"><div class="k">Engine score</div>${scored
+        ? `<div class="big">${esc(d.composite)}<span class="small"> / 100</span></div><div class="small">${d.judge_runs > 1 ? "Median of " + esc(d.judge_runs) + " judge passes" : "Single judge pass"} · ${esc(d.model)}${d.anchors_used?.length ? " · anchored on " + d.anchors_used.length + " real result(s)" : " · no anchors yet"}</div>`
+        : `<div class="big" style="font-size:24px">Not scored</div><div class="small">No API key on the server, so only the evidence checks ran. Set <code>ANTHROPIC_API_KEY</code> to get scores.</div>`}</div>
+      ${estimateTile(d)}
+    </div></div>`;
+
+  if(d.flags?.length) h += `<div class="card"><h3>Flags</h3>${d.flags.map(f => `<div class="flag">${esc(f)}</div>`).join("")}</div>`;
+
+  h += `<div class="card"><h3>Parameters</h3>`;
+  for(const [k, label] of P){
+    const p = d.parameters[k], cov = d.coverage[k] || {}, cal = (d.calibration || {})[k] || {};
+    const spread = (d.score_spread || {})[k];
+    h += `<div class="param"><div class="top"><span class="name">${esc(label)}</span><span class="pill">${W[p.weight]}</span>
+      ${p.score != null && p.confidence != null ? `<span class="pill ${p.confidence >= .7 ? "good" : p.confidence >= .45 ? "warn" : "bad"}">confidence ${Math.round(p.confidence*100)}%</span>` : ""}
+      ${spread ? `<span class="pill">±${esc(spread)} across passes</span>` : ""}
+      <span class="num">${p.score != null ? esc(p.score) : "—"}</span></div>
+      ${cal.estimate != null ? `<div class="small">Estimated real score for this parameter: <b>${esc(cal.estimate)} ± ${esc(cal.band)}</b></div>` : ""}
+      <div class="bar" role="img" aria-label="Evidence found: ${esc(cov.found_count||0)} of ${esc(cov.expected_count||0)}"><i style="width:${cov.coverage_pct||0}%"></i></div>
+      <div class="small">Visible evidence: ${esc(cov.found_count||0)} of ${esc(cov.expected_count||0)} expected signals</div>
+      <div class="chips" style="margin-top:8px">${(cov.found||[]).map(x => `<span class="chip ok">${esc(x)}</span>`).join("")}${(cov.missing||[]).map(x => `<span class="chip miss">not observed: ${esc(x)}</span>`).join("")}</div>
+      ${p.rationale ? `<p style="margin:10px 0 0">${esc(p.rationale)}</p>` : ""}
+      ${p.fixes?.length ? `<div class="small" style="margin-top:8px"><b>Fix next</b></div><ul class="tight">${p.fixes.map(f => `<li>${esc(f)}</li>`).join("")}</ul>` : ""}
+      ${p.evidence?.length ? `<div class="small" style="margin-top:8px"><b>What the judge credited</b></div><ul class="tight">${p.evidence.map(ev => `<li>${esc(ev.claim)} <code>${esc(ev.file)}${ev.lines ? ":" + esc(ev.lines) : ""}</code></li>`).join("")}</ul>` : ""}
+    </div>`;
+  }
+  h += `</div>`;
+
+  const rm = d.readme_map || {}, dep = d.deployment_check || {};
+  h += `<div class="card"><h3>README signposting</h3><p class="small">Whether the README names each area a grader looks for.</p><div class="chips">${Object.entries(rm).filter(([k]) => k !== "coverage_pct").map(([k,v]) => `<span class="chip ${v ? "ok" : "miss"}">${v ? "" : "missing: "}${esc(k)}</span>`).join("")}</div>
+    <h3 style="margin-top:16px">Deployed link</h3><p class="small">${esc({reachable:"Reachable" + (dep.https ? " over HTTPS" : ""), not_provided:"Not provided.", unreachable:"Did not respond.", blocked:"Not checked: " + (dep.reason||""), redirects:"Responds with a redirect.", error:"Responded with HTTP " + dep.http_status}[dep.status] || "Not checked.")} A live link is evidence only and never changes a score.</p>
+    <h3 style="margin-top:16px">Files shown to the judge</h3><div class="chips">${(d.sampled_files||[]).map(f => `<span class="chip">${esc(f)}</span>`).join("") || `<span class="small">None sampled.</span>`}</div>
+    <p class="small" style="margin-top:14px">Engine ${esc(d.provenance.engine_version)} · rubric ${esc(d.provenance.rubric_version)}</p></div>`;
+  $("result").innerHTML = h;
+}
+
+/* ---- real scores ---- */
+$("recForm").addEventListener("submit", async e => {
+  e.preventDefault();
+  const err = $("recErr"); err.hidden = true;
+  const h2s = {}; for(const [k] of [["composite"], ...P]){ const v = $("s_"+k).value; if(v !== "") h2s[k] = +v; }
+  if(!$("rRepo").value.trim()){ err.textContent = "Enter the repository link."; err.hidden = false; return; }
+  if(!Object.keys(h2s).length){ err.textContent = "Enter at least one real score."; err.hidden = false; return; }
+  $("recBtn").disabled = true; $("recStatus").textContent = "Reading the repository…";
+  try{
+    const r = await api("/api/records", {repo_url: $("rRepo").value.trim(), h2s, edition: $("rEdition").value.trim(), challenge_text: $("rChallenge").value,
+      attempt: $("rAttempt").value ? +$("rAttempt").value : null, source: $("rSource").value, notes: $("rNotes").value});
+    $("recStatus").textContent = `Saved. ${r.total_records} real result(s) recorded.`;
+    $("recForm").reset(); loadRecords();
+  }catch(ex){ err.textContent = ex.message; err.hidden = false; $("recStatus").textContent = ""; }
+  finally{ $("recBtn").disabled = false; }
+});
+async function loadRecords(){
+  try{
+    const d = await api("/api/records");
+    $("recCount").textContent = d.count ? `${d.count} real result(s). Each one is a reference point for the judge.` : "None yet. Your own submissions are the most valuable ones to add.";
+    $("recTable").innerHTML = d.count ? `<table><thead><tr><th>Repository</th><th>Edition</th><th>Overall</th>${P.map(([,l]) => `<th>${esc(l)}</th>`).join("")}<th>Engine</th></tr></thead><tbody>${d.records.map(r => `<tr><td>${esc(r.repo_url.replace(/^https?:\/\/github\.com\//,""))}</td><td>${esc(r.edition||"")}</td><td>${esc(r.h2s.composite ?? "—")}</td>${P.map(([k]) => `<td>${esc(r.h2s[k] ?? "—")}</td>`).join("")}<td>${esc(r.engine ? r.engine.composite : "not run")}</td></tr>`).join("")}</tbody></table>` : "";
+  }catch(ex){ $("recCount").textContent = ex.message; }
+}
+
+/* ---- accuracy ---- */
+const STATUS = {active:["On","good"], no_gain:["Off — no gain","warn"], insufficient_support:["Off — too few results","warn"]};
+async function loadAccuracy(){
+  try{
+    const d = await api("/api/calibration");
+    $("accSummary").innerHTML = `<div class="scorehead" style="margin-bottom:14px">
+      <div class="tile"><div class="k">Real results recorded</div><div class="big">${esc(d.labeled_records)}</div><div class="small">${esc(d.with_parameter_breakdown)} with the six-parameter breakdown</div></div>
+      <div class="tile"><div class="k">Checked against the engine</div><div class="big">${esc(d.evaluated_records)}</div><div class="small">${d.model ? "Last fit " + esc(d.model.version) : "Not fitted yet"}</div></div></div>`;
+    const keys = d.model?.keys;
+    $("accTable").innerHTML = keys ? `<table><thead><tr><th>Score</th><th>Results</th><th>Correction</th><th>Raw error</th><th>"Guess the average" error</th><th>Held-out error</th><th>Rank agreement</th></tr></thead><tbody>${[["composite","Overall"], ...P].map(([k,l]) => { const v = keys[k] || {}; const s = STATUS[v.status] || ["—",""]; return `<tr><td>${esc(l)}</td><td>${esc(v.n ?? 0)}</td><td><span class="pill ${s[1]}">${s[0]}</span></td><td>${esc(v.raw_mae ?? "—")}</td><td>${esc(v.mean_baseline_mae ?? "—")}</td><td>${esc(v.loo_mae ?? "—")}</td><td>${esc(v.spearman ?? "—")}</td></tr>`; }).join("")}</tbody></table><p class="small">Errors are in score points; lower is better. A correction is on only where held-out error beats both baselines.</p>` : `<p class="small">Nothing fitted yet. Record real results, run <code>promptwars-score evaluate</code>, then refit.</p>`;
+  }catch(ex){ $("accSummary").innerHTML = `<div class="err">${esc(ex.message)}</div>`; }
+}
+$("refit").addEventListener("click", async () => {
+  $("accStatus").textContent = "Fitting…";
+  try{ await api("/api/calibration/fit", {}); $("accStatus").textContent = "Refitted."; loadAccuracy(); }
+  catch(ex){ $("accStatus").textContent = ex.message; }
+});
+
+init();
 </script>
 </body>
 </html>

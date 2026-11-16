@@ -1,0 +1,7 @@
+data/labeled_records.json
+data/calibration.json
+data/challenges.json
+data/challenges/
+__pycache__/
+*.egg-info/
+.pytest_cache/

@@ -1,5 +1,72 @@
 # PromptWars Self-Scorer
 
+A transparent pre-submission auditor for PromptWars repos: deterministic evidence
+checks plus an LLM judge on the six graded parameters, with per-parameter fixes.
+**It is a proxy, not Hack2Skill's grader.** It shows its reasoning, and it only
+claims an "estimated real score" where that estimate has been validated.
+
+## Quick start
+
+```bash
+cd promptwars-scorer
+python -m venv .venv && source .venv/bin/activate      # Windows: .venv\Scripts\activate
+pip install -e ".[web,dev]"
+export ANTHROPIC_API_KEY=sk-ant-...                     # optional: without it you get evidence checks only
+uvicorn promptwars_scorer.server:app --reload           # open http://127.0.0.1:8000
+```
+
+The page mirrors the Hack2Skill submission form: pick the challenge (or paste its
+statement), paste a public GitHub URL, press Evaluate. The repo is cloned into a
+throwaway sandbox and read, never executed.
+
+CLI equivalent:
+
+```bash
+promptwars-score https://github.com/you/your-repo --challenge challenge.md --runs 3
+```
+
+## How it gets more accurate (0.4)
+
+The engine learns only from **labeled records**: submissions whose real scores you know.
+
+| Technique | What it does | Needs |
+|---|---|---|
+| Anchored judging | Shows the judge a few real graded submissions ("this got Code Quality 89") so it scores on the grader's scale | 1+ record |
+| Median of N passes | `--runs 3` takes the per-parameter median and reports the spread | nothing |
+| Calibration | Shrunk offset / affine / isotonic correction per parameter, chosen by leave-one-out error | 5+ evaluated records |
+| Evidence coverage | Found / not-observed checklist per parameter, fed to the judge and shown in the UI | nothing |
+
+Calibration is switched on per parameter **only if** its held-out error beats both
+"use the raw engine score" and "always guess the average real score". On compressed
+leaderboards the second baseline is hard to beat; when it isn't beaten, the tool says
+so and withholds the estimate. Deep learning is deliberately not used: with tens of
+labels it would memorise them.
+
+```bash
+# 1. record real results (yours are the most valuable: they have the six-parameter breakdown)
+promptwars-score record add https://github.com/you/repo --edition "PromptWars C3" \
+    --challenge challenges/c3.md --composite 97.4 --code-quality 89 --security 99
+promptwars-score record import data/my_scores.csv        # bulk; see data/records_template.csv
+# 2. run the engine on every labeled repo (anchors exclude the repo itself)
+promptwars-score evaluate --runs 3
+# 3. fit + validation report
+promptwars-score calibrate
+```
+
+Records live in `data/` (git-ignored). Only a compact evidence profile is stored, never source code.
+
+## Safety
+
+GitHub-only URLs, public repos, 10 MB gate, shallow clone with hooks/credentials disabled,
+no repo code execution, repo text fenced as untrusted data in the judge prompt, hard caps
+the judge cannot override, SSRF-guarded deployed-link check, per-IP rate limit, at most 3
+judge passes per run. Before exposing it beyond your own machine, also run it in a container
+and put authentication in front of it.
+
+---
+
+## Original notes
+
 A pre-submission gut-check that scores a repo on the six PromptWars parameters —
 **Code Quality, Security, Efficiency, Testing, Accessibility, Problem Alignment** —
 and gives you the per-parameter breakdown your playbook says to get *first*.
